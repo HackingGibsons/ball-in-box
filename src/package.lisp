@@ -9,9 +9,6 @@
 (defvar *root* (asdf:system-source-directory :afdog)
   "What is considered the root of the application.")
 
-(defvar *fps* 60
-  "The frame-rate we use")
-
 (defvar *window* `(:width 1024 :height 768
                    :title "Ball-In-Box")
   "A bundle of window parameters")
