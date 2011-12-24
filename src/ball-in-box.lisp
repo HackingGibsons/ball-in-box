@@ -17,18 +17,19 @@
       (gl:clear-color 0 0 0 0)
       (gl:matrix-mode :projection)
       (gl:load-identity)
-      (gl:ortho 0 1 0 1 -1 1)
+      (gl:ortho 0 (getf *window* :width) (getf *window* :height) 0 -1 1)
 
       (sdl:with-events (:poll)
         (:quit-event () t)
         (:idle ()
                (gl:clear :color-buffer-bit)
                (gl:color 1 1 1)
-               (gl:with-primitive :polygon
-                 (gl:vertex 0.25 0.25 0)
-                 (gl:vertex 0.75 0.25 0)
-                 (gl:vertex 0.75 0.75 0)
-                 (gl:vertex 0.25 0.75 0))
+               (let ((cx (/ (getf *window* :width) 2.0))
+                     (cy (/ (getf *window* :height) 2.0)))
+                 (gl:with-primitive :polygon
+                   (gl:vertex (+ cx 200) (+ cy 200))
+                   (gl:vertex (+ cx 200) (- cy 200))
+                   (gl:vertex (- cx 200) (- cy 200))
+                   (gl:vertex (- cx 200) (+ cy 200))))
                (gl:flush)
-
                (sdl:update-display))))))
