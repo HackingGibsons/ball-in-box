@@ -1,5 +1,32 @@
 (in-package :ball-in-box)
 
+;; This is just to try out sdl surface rendering.
+(defun surface-rendering-test ()
+  (log-for (output) "BOOTING!")
+  (sb-int:with-float-traps-masked (:divide-by-zero :invalid :inexact :underflow :overflow)
+    (sdl:with-init (sdl:SDL-INIT-AUDIO sdl:SDL-INIT-VIDEO)
+      (sdl:window (getf *window* :width) (getf *window* :height)
+                  :fps (make-instance 'sdl:fps-timestep :dt 10)
+                  :title-caption (getf *window* :title)
+                  :icon-caption (getf *window* :title)
+                  :double-buffer t
+                  :hw t)
+      (setf (sdl:frame-rate) 5)
+      (sdl:clear-display (sdl:color))
+      (let* ((x (/ (getf *window* :width) 2))
+             (y (/ (getf *window* :height) 2))
+             (surface (sdl:create-surface 40 40 :x (- x 20) :y (- y 20))))
+        (sdl:clear-display sdl:*blue* :surface surface)
+        (sdl:draw-circle-* 20 20 10 :color sdl:*red* :surface surface)
+        (sdl:blit-surface surface)
+        (sdl:with-events (:poll)
+          (:quit-event () t)
+          (:idle ()
+                 (let ()
+                   (sdl:with-timestep
+                     (log-for (output) "Timestep: ~A FPS: ~F" (sdl:ticks) (sdl:average-fps)))
+                   (sdl:update-display))))))))
+
 ;; Textures
 (defun red-circle-texture ()
   (let* ((gl-texture (first (gl:gen-textures 1)))
