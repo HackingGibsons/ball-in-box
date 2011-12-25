@@ -1,5 +1,9 @@
 (in-package :ball-in-box)
 
+;; Conversion
+(defun deg-to-rad (deg)
+  (* deg (/ pi 180)))
+
 ;; Some vector helpers
 (defmethod dot ((v1 vector) (v2 vector))
   "Dot product of two vectors: `v1' . `v2'"
