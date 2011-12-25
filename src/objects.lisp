@@ -54,11 +54,6 @@ furthest point from center and reporting its distance."
              :initarg :velocity :initarg :v
              :accessor velocity :accessor v)))
 
-(defmethod collision :after ((o accelerating-object) &rest others)
-  (declare (ignorable others))
-  (log-for (trace solid-object) "Decelerating: ~A" o)
-  (setf (accel o) #(0 0 0)))
-
 (defmethod collision :after ((o moving-object) &rest others)
   (declare (ignorable others))
   (log-for (trace solid-object) "Stopping: ~A" o)
@@ -75,6 +70,11 @@ furthest point from center and reporting its distance."
   ((acceleration :initform #(0 0 0)
                  :initarg :acceleration :initarg :accel
                  :accessor acceleration :accessor accel)))
+
+(defmethod collision :after ((o accelerating-object) &rest others)
+  (declare (ignorable others))
+  (log-for (trace solid-object) "Decelerating: ~A" o)
+  (setf (accel o) #(0 0 0)))
 
 (defmethod tick :before ((o accelerating-object) dt)
   (let* ((scale (/ dt 1000))
