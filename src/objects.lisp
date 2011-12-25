@@ -96,6 +96,35 @@ furthest point from center and reporting its distance."
            :initarg :height
            :accessor height)))
 
+(defclass gl-texture-mixin ()
+    ((tex-id :reader tex-id :initform (first (gl:gen-textures 1)))))
+
+(defclass sdl-overlay (rectangle gl-texture-mixin)
+  ((surface :accessor overlay-surface :initform nil)))
+
+(defmethod initialize-instance :after ((o gl-texture-mixin) &key)
+  (gl:bind-texture :texture-2d (tex-id o))
+  (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+  (gl:tex-parameter :texture-2d :texture-mag-filter :linear))
+
+(defmethod initialize-instance :after ((o sdl-overlay) &key)
+  (with-slots (surface width height) o
+    (setf (slot-value o 'surface)
+          (sdl:create-surface width height :alpha 0 :pixel-alpha 0))
+    (sdl:with-color (sdl:*red*)
+      (sdl:with-font (font sdl:*ttf-font-vera*)
+        (sdl:clear-display (sdl:color :a 0) :surface surface)
+        (sdl:draw-string-solid-* "Texture" 0 0 :surface surface)))
+    (sdl:with-pixel (pixels (sdl:fp surface))
+      (gl:tex-image-2d :texture-2d 0 :rgb width height 0 :rgba :unsigned-byte (sdl:pixel-data pixels)))
+    (gl:bind-texture :texture-2d 0)))
+
+(defclass moving-rectangle (rectangle moving-object)
+  ())
+
+(defclass accelerating-rectangle (rectangle accelerating-object)
+  ())
+
 (defmethod vertexes ((o rectangle))
   "Returns a list of vector3 vertexes in drawing order
 for the object"
@@ -118,8 +147,6 @@ for the object"
   (gl:with-primitive :polygon
     (mapc #L(apply #'gl:vertex (map 'list #'identity !1))
           (vertexes o))))
-
-
 (defclass circle (object)
   ((color :initform `(255 255 255)
           :initarg :color
@@ -159,3 +186,27 @@ for the object"
 
 (defclass solid-accelerating-circle (circle accelerating-object solid-object)
   ())
+
+(defmethod draw ((o sdl-overlay))
+    (let ((top (+ (cy o) (/ (height o) 2)))
+          (bottom (- (cy o) (/ (height o) 2)))
+          (left (- (cx o) (/ (width o) 2)))
+          (right (+ (cx o) (/ (width o) 2))))
+      (gl:enable :texture-2d :blend)
+
+      (gl:color 1.0 1.0 1.0 0.8)
+      (gl:blend-func :src-alpha :one)
+
+      (gl:bind-texture :texture-2d (tex-id o))
+      (gl:with-primitive :polygon
+        (gl:tex-coord 1 1)
+        (gl:vertex right top (cz o))
+        (gl:tex-coord 1 0)
+        (gl:vertex right bottom (cz o))
+        (gl:tex-coord 0 0)
+        (gl:vertex left bottom (cz o))
+        (gl:tex-coord 0 1)
+        (gl:vertex left top (cz o)))
+
+      (gl:disable :texture-2d :blend)))
+
