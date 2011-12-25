@@ -59,16 +59,25 @@
 (defclass accelerating-rectangle (rectangle accelerating-object)
   ())
 
+(defmethod vertexes ((o rectangle))
+  "Returns a list of vector3 vertexes in drawing order
+for the object"
+  (flet ((half (v) (/ v 2)))
+    (let ((top (+ (cy o) (half (height o))))
+          (bottom (- (cy o) (half (height o))))
+          (left (- (cx o) (half (width o))))
+          (right (+ (cx o) (half (width o)))))
+
+      (list (vector left bottom (cz o))
+            (vector left top (cz o))
+            (vector right top (cz o))
+            (vector right bottom (cz o))))))
+
+
 (defmethod draw ((o rectangle))
-  (let ((top (+ (cy o) (/ (height o) 2)))
-        (bottom (- (cy o) (/ (height o) 2)))
-        (left (- (cx o) (/ (width o) 2)))
-        (right (+ (cx o) (/ (width o) 2))))
+  (when (color o)
+    (apply #'gl:color (color o)))
 
-    (apply #'gl:color (color o))
-
-    (gl:with-primitive :polygon
-      (gl:vertex right top (cz o))
-      (gl:vertex right bottom (cz o))
-      (gl:vertex left bottom (cz o))
-      (gl:vertex left top (cz o)))))
+  (gl:with-primitive :polygon
+    (mapc #L(apply #'gl:vertex (map 'list #'identity !1))
+          (vertexes o))))
