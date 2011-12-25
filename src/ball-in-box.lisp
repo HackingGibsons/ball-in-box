@@ -17,8 +17,13 @@
                 :height (getf *window* :height))
 
     ;; Add some stuff
-    (push (make-instance 'moving-rectangle :width 30 :height 30 :color '(0 255 0) :center #(-100 0 -0.5)
-                         :v #(0.001 0.001 0))
+    (push (make-instance 'accelerating-rectangle :width 25 :height 25 :color '(0 0 255) :center #(150 -350 0)
+                         :acceleration (make-array 3 :initial-contents
+                                                   (list 0 (gravity world) 0)))
+          (objects world))
+
+    (push (make-instance 'moving-rectangle :width 30 :height 30 :color '(0 255 0) :center #(-100 0 0.5)
+                         :v #(10 5 0))
           (objects world))
 
     (push (make-instance 'rectangle :width 100 :height 100)
