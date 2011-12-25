@@ -1,5 +1,8 @@
 (in-package :ball-in-box)
 
+;; Debugging
+(defcategory fps)
+
 ;; Entry
 (defmethod ball-in-box :around (&key)
   "Setup the traps, int the right parts of SDL"
@@ -17,20 +20,26 @@
                 :height (getf *window* :height))
 
     ;; Add some stuff
-    (push (make-instance 'accelerating-rectangle :width 25 :height 25 :color '(0 0 255) :center #(150 -350 0)
-                         :acceleration (vector 0 (gravity world) 0))
-          (objects world))
+    (add-object world
+                (make-instance 'accelerating-rectangle :width 25 :height 25 :color '(0 0 255) :center #(150 -350 0)
+                               :acceleration (vector 0 (gravity world) 0)))
 
-    (push (make-instance 'accelerating-rectangle :width 35 :height 25 :color '(255 0 255) :center #(-150 -350 0)
-                         :acceleration (vector 0 (* 4 (gravity world)) 0))
-          (objects world))
+    (add-object world
+                (make-instance 'accelerating-rectangle :width 35 :height 25 :color '(255 0 255) :center #(-150 -350 0)
+                               :acceleration (vector 0 (* 4 (gravity world)) 0)))
 
-    (push (make-instance 'moving-rectangle :width 30 :height 30 :color '(0 255 0) :center #(-100 0 0.5)
-                         :v #(10 5 0))
-          (objects world))
+    (add-object world
+                (make-instance 'moving-rectangle :width 30 :height 30 :color '(0 255 0) :center #(-100 0 0.5)
+                               :v #(10 5 0)))
 
-    (push (make-instance 'rectangle :width 100 :height 100)
-          (objects world))
+    (add-object world
+                (make-instance 'rectangle :width 100 :height 100))
+
+    (add-object world
+                (make-instance 'solid-accelerating-rectangle :width 35 :height 25 :color '(255 0 100) :center #(-300 -350 0)
+                               :acceleration (vector 0 (* 8 (gravity world)) 0)))
+    (add-object world
+                (make-instance 'solid-rectangle :width 40 :height 40 :center #(-300 100 0)))
 
     (log-for (output) "Entering event loop.")
     (sdl:with-events (:poll)
@@ -43,4 +52,5 @@
        (draw world)
 
        ;; Finish the frame
+       (log-for (fps) "FPS: ~F" (sdl:average-fps))
        (sdl:update-display)))))

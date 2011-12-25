@@ -1,7 +1,8 @@
 (in-package :ball-in-box)
 
 (defclass object ()
-  ((center :initform #(0 0 0) :initarg :center
+  ((world :initform nil :initarg :world :accessor world)
+   (center :initform #(0 0 0) :initarg :center
            :accessor center
            :accessor c)))
 
@@ -13,14 +14,50 @@
 (defmethod cz ((o object))
   (svref (center o) 2))
 
+(defmethod distance ((o1 object) (o2 object))
+  "Distance between two objects."
+  (diff-mag (center o1) (center o2)))
 (defmethod vertexes ((o object)) nil)
 (defmethod draw ((o object)) nil)
 (defmethod tick ((o object) dt) nil)
+(defmethod radius ((o object))
+  "Calculate a generalized radius for `o' by determining the
+furthest point from center and reporting its distance."
+  (let ((distances (mapcar #L(diff-mag (center o) !1)
+                           (vertexes o))))
+    (and distances
+         (apply #'max distances))))
+
+(defcategory solid-object)
+(defclass solid-object (object)
+  ())
+
+(defmethod collision ((o solid-object) &rest objects)
+  "Signal a collision between `o' and `objects'"
+  (declare (ignorable objects))
+  nil)
+
+(defmethod tick :after ((o solid-object) dt)
+  "Attempt to signal collisions."
+  (let* ((solids (remove-if-not #L(and (not (eq !1 o))
+                                       (typep !1 'solid-object))
+                                (objects (world o))))
+         (radius (radius o))
+         (in-radius (remove-if #L(> (distance o !1)
+                                    (+ radius (radius !1)))
+                               solids)))
+    (when in-radius
+      (apply #'collision o in-radius))))
 
 (defclass moving-object (object)
   ((velocity :initform #(0 0 0)
              :initarg :velocity :initarg :v
              :accessor velocity :accessor v)))
+
+(defmethod collision :after ((o moving-object) &rest others)
+  (declare (ignorable others))
+  (log-for (trace solid-object) "Stopping: ~A" o)
+  (setf (v o) #(0 0 0)))
 
 (defmethod tick :before ((o moving-object) dt)
   "Translate the moving object `o' along it's velocity vector scaled for timeslice `dt'"
@@ -33,6 +70,11 @@
   ((acceleration :initform #(0 0 0)
                  :initarg :acceleration :initarg :accel
                  :accessor acceleration :accessor accel)))
+
+(defmethod collision :after ((o accelerating-object) &rest others)
+  (declare (ignorable others))
+  (log-for (trace solid-object) "Decelerating: ~A" o)
+  (setf (accel o) #(0 0 0)))
 
 (defmethod tick :before ((o accelerating-object) dt)
   (let* ((scale (/ dt 1000))
@@ -54,10 +96,16 @@
            :initarg :height
            :accessor height)))
 
+(defclass solid-rectangle (rectangle solid-object)
+  ())
+
 (defclass moving-rectangle (rectangle moving-object)
   ())
 
 (defclass accelerating-rectangle (rectangle accelerating-object)
+  ())
+
+(defclass solid-accelerating-rectangle (rectangle accelerating-object solid-object)
   ())
 
 (defmethod vertexes ((o rectangle))
