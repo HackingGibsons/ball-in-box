@@ -5,18 +5,15 @@
            :accessor center
            :accessor c)))
 
+;; Center coordinate accessors
 (defmethod cx ((o object))
   (svref (center o) 0))
-
 (defmethod cy ((o object))
   (svref (center o) 1))
-
 (defmethod cz ((o object))
   (svref (center o) 2))
 
-(defmethod draw ((o object))
-  (log-for (output warn) "Trying to draw a singularity: ~A" o))
-
+(defmethod draw ((o object)) nil)
 (defmethod tick ((o object) dt) nil)
 
 (defclass moving-object (object)
@@ -27,7 +24,7 @@
 (defmethod tick :before ((o moving-object) dt)
   "Translate the moving object `o' along it's velocity vector scaled for timeslice `dt'"
   (let* ((scale (/ 1000 dt))
-         (scaled (map 'vector #'(lambda (i) (* scale i)) (velocity o))))
+         (scaled (map 'vector #L(* scale !1) (velocity o))))
     (setf (center o)
           (map 'vector #'+ (center o) scaled))))
 

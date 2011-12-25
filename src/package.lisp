@@ -5,6 +5,7 @@
            :ball-in-box))
 
 (in-package :ball-in-box)
+(arnesi:enable-sharp-l)
 
 (defvar *root* (asdf:system-source-directory :afdog)
   "What is considered the root of the application.")
