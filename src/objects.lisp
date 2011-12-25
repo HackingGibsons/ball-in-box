@@ -33,6 +33,7 @@ furthest point from center and reporting its distance."
   ())
 
 (defmethod collision ((o solid-object) &rest objects)
+  "Signal a collision between `o' and `objects'"
   (declare (ignorable objects))
   nil)
 
@@ -55,7 +56,7 @@ furthest point from center and reporting its distance."
 
 (defmethod collision :after ((o accelerating-object) &rest others)
   (declare (ignorable others))
-  (log-for (trace solid-object) "Decellerating: ~A" o)
+  (log-for (trace solid-object) "Decelerating: ~A" o)
   (setf (accel o) #(0 0 0)))
 
 (defmethod collision :after ((o moving-object) &rest others)
