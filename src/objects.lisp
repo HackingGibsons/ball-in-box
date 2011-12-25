@@ -28,8 +28,16 @@ furthest point from center and reporting its distance."
     (and distances
          (apply #'max distances))))
 
+(defcategory solid-object)
 (defclass solid-object (object)
   ())
+
+(defmethod tick :after ((o solid-object) dt)
+  "Attempt to signal collisions."
+  (let* ((solids (remove o (remove-if-not #L(typep !1 'solid-object) (objects (world o)))))
+         (radius (radius o))
+         (in-radius (remove-if #L(<= radius !1) solids :key #L(distance o !1))))
+    (log-for (trace solid-object) "Self: ~A Solids: ~A In-R: ~A" o solids in-radius)))
 
 (defclass moving-object (object)
   ((velocity :initform #(0 0 0)
