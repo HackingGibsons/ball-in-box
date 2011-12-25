@@ -36,10 +36,13 @@
                 (make-instance 'rectangle :width 100 :height 100))
 
     (add-object world
-                (make-instance 'solid-accelerating-rectangle :width 35 :height 25 :color '(255 0 100) :center #(-300 -350 0)
+                (make-instance 'solid-accelerating-circle :radius 30 :color '(255 0 100) :center #(-300 -350 0)
                                :acceleration (vector 0 (* 8 (gravity world)) 0)))
     (add-object world
                 (make-instance 'solid-rectangle :width 40 :height 40 :center #(-300 100 0)))
+
+    (add-object world
+                (make-instance 'circle :radius 150 :center #(300 0 0)))
 
     (log-for (output) "Entering event loop.")
     (sdl:with-events (:poll)
