@@ -1,7 +1,7 @@
 (asdf:defsystem #:ball-in-box
   :version "0.0.0"
   :depends-on (#:log5
-
+               #:arnesi
                #:lispbuilder-sdl
                #:lispbuilder-sdl-mixer
                #:cl-opengl)
