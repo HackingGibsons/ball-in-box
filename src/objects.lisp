@@ -23,11 +23,25 @@
 
 (defmethod tick :before ((o moving-object) dt)
   "Translate the moving object `o' along it's velocity vector scaled for timeslice `dt'"
-  (let* ((scale (/ 1000 dt))
+  (let* ((scale (/ dt 1000))
          (scaled (map 'vector #L(* scale !1) (velocity o))))
     (setf (center o)
           (map 'vector #'+ (center o) scaled))))
 
+(defclass accelerating-object (moving-object)
+  ((acceleration :initform #(0 0 0)
+                 :initarg :acceleration :initarg :accel
+                 :accessor acceleration :accessor accel)))
+
+(defmethod tick :before ((o accelerating-object) dt)
+  (let* ((scale (/ dt 1000))
+         (scaled (map 'vector #L(* scale !1) (acceleration o))))
+    (log-for (output) "Accel: ~A" scaled)
+    (setf (velocity o)
+          (map 'vector #'+ (velocity o) scaled))
+    (log-for (output) "New v of ~A: ~A" o (velocity o))))
+
+;;; Demo objects
 (defclass rectangle (object)
   ((color :initform '(255 0 0)
           :initarg :color
@@ -40,6 +54,9 @@
            :accessor height)))
 
 (defclass moving-rectangle (rectangle moving-object)
+  ())
+
+(defclass accelerating-rectangle (rectangle accelerating-object)
   ())
 
 (defmethod draw ((o rectangle))
