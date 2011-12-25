@@ -111,7 +111,7 @@ furthest point from center and reporting its distance."
   (with-slots (surface width height) o
     (setf (slot-value o 'surface)
           (sdl:create-surface width height :alpha 0 :pixel-alpha 0))
-    (sdl:with-color (sdl:*red*)
+    (sdl:with-color (sdl:*white*)
       (sdl:with-font (font sdl:*ttf-font-vera*)
         (sdl:clear-display (sdl:color :a 0) :surface surface)
         (sdl:draw-string-solid-* "Texture" 0 0 :surface surface)))
@@ -194,7 +194,7 @@ for the object"
           (right (+ (cx o) (/ (width o) 2))))
       (gl:enable :texture-2d :blend)
 
-      (gl:color 1.0 1.0 1.0 0.8)
+      (gl:color 1.0 1.0 1.0 1.0)
       (gl:blend-func :src-alpha :one)
 
       (gl:bind-texture :texture-2d (tex-id o))
