@@ -32,17 +32,32 @@ furthest point from center and reporting its distance."
 (defclass solid-object (object)
   ())
 
+(defmethod collision ((o solid-object) &rest objects)
+  (declare (ignorable objects))
+  nil)
+
 (defmethod tick :after ((o solid-object) dt)
   "Attempt to signal collisions."
   (let* ((solids (remove o (remove-if-not #L(typep !1 'solid-object) (objects (world o)))))
          (radius (radius o))
          (in-radius (remove-if #L(<= radius !1) solids :key #L(distance o !1))))
-    (log-for (trace solid-object) "Self: ~A Solids: ~A In-R: ~A" o solids in-radius)))
+    (when in-radius
+      (apply #'collision o in-radius))))
 
 (defclass moving-object (object)
   ((velocity :initform #(0 0 0)
              :initarg :velocity :initarg :v
              :accessor velocity :accessor v)))
+
+(defmethod collision :after ((o accelerating-object) &rest others)
+  (declare (ignorable others))
+  (log-for (trace solid-object) "Decellerating: ~A" o)
+  (setf (accel o) #(0 0 0)))
+
+(defmethod collision :after ((o moving-object) &rest others)
+  (declare (ignorable others))
+  (log-for (trace solid-object) "Stopping: ~A" o)
+  (setf (v o) #(0 0 0)))
 
 (defmethod tick :before ((o moving-object) dt)
   "Translate the moving object `o' along it's velocity vector scaled for timeslice `dt'"
