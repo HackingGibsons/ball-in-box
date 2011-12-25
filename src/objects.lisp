@@ -42,7 +42,9 @@ furthest point from center and reporting its distance."
                                        (typep !1 'solid-object))
                                 (objects (world o))))
          (radius (radius o))
-         (in-radius (remove-if #L(<= radius !1) solids :key #L(distance o !1))))
+         (in-radius (remove-if #L(> (distance o !1)
+                                    (+ radius (radius !1)))
+                               solids)))
     (when in-radius
       (apply #'collision o in-radius))))
 
