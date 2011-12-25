@@ -9,10 +9,11 @@
                         (;; Basics
                          (:file "package")
                          (:file "logging" :depends-on ("package"))
+                         (:file "math" :depends-on ("logging"))
 
                          ;; Internals
                          (:file "game-world" :depends-on ("package" "logging"))
-                         (:file "objects" :depends-on ("game-world"))
+                         (:file "objects" :depends-on ("game-world" "math"))
 
                          ;; Drivers
                          (:file "ball-in-box" :depends-on ("game-world" "objects"))))))
