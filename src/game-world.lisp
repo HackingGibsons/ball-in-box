@@ -26,6 +26,7 @@
                              :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))))
 
   (prog1 world
+    (gl:enable :depth-test)
     (gl:clear-color 0 0 0 0)
     (gl:matrix-mode :projection)
     (gl:load-identity)
@@ -36,7 +37,7 @@
   t)
 
 (defmethod draw :before ((world game-world))
-  (gl:clear :color-buffer-bit)
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:matrix-mode :modelview)
   (gl:load-identity)
   (gl:translate (/ (screen-width world) 2.0)
