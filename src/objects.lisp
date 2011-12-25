@@ -1,7 +1,8 @@
 (in-package :ball-in-box)
 
 (defclass object ()
-  ((center :initform #(0 0 0) :initarg :center
+  ((world :initform nil :initarg :world :accessor world)
+   (center :initform #(0 0 0) :initarg :center
            :accessor center
            :accessor c)))
 
@@ -24,6 +25,9 @@ furthest point from center and reporting its distance."
                            (vertexes o))))
     (and distances
          (apply #'max distances))))
+
+(defclass solid-object (object)
+  ())
 
 (defclass moving-object (object)
   ((velocity :initform #(0 0 0)
@@ -62,10 +66,16 @@ furthest point from center and reporting its distance."
            :initarg :height
            :accessor height)))
 
+(defclass solid-rectangle (rectangle solid-object)
+  ())
+
 (defclass moving-rectangle (rectangle moving-object)
   ())
 
 (defclass accelerating-rectangle (rectangle accelerating-object)
+  ())
+
+(defclass solid-accelerating-rectangle (rectangle accelerating-object solid-object)
   ())
 
 (defmethod vertexes ((o rectangle))

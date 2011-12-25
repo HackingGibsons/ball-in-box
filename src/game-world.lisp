@@ -17,6 +17,10 @@
 (defmethod tick ((world game-world) dt)
   (mapc #L(tick !1 dt) (objects world)))
 
+(defmethod add-object ((world game-world) (o object))
+  (setf (world o) world)
+  (pushnew o (objects world)))
+
 (defmethod init ((world game-world) &key (width 1024) (height 768))
   (with-slots (screen screen-width screen-height) world
     (setf screen-width width
