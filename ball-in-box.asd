@@ -15,6 +15,7 @@
 
                          ;; Internals
                          (:file "game-world" :depends-on ("package" "logging"))
+                         (:file "objects" :depends-on ("game-world"))
 
                          ;; Drivers
-                         (:file "ball-in-box" :depends-on ("game-world"))))))
+                         (:file "ball-in-box" :depends-on ("game-world" "objects"))))))
