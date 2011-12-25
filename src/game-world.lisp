@@ -45,9 +45,6 @@
 
     (gl:matrix-mode :projection)
 
-    (gl:color 1.0 1.0 1.0 0.5)
-    (gl:blend-func :src-alpha :one)
-
     (gl:load-identity)
     (gl:ortho 0 width height 0 -1 1)))
 
