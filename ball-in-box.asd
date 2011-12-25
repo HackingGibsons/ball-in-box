@@ -9,6 +9,12 @@
                #:uffi
                #:cffi)
   :components ((:module "src" :components
-                        ((:file "package")
+                        (;; Basics
+                         (:file "package")
                          (:file "logging" :depends-on ("package"))
-                         (:file "ball-in-box" :depends-on ("package" "logging"))))))
+
+                         ;; Internals
+                         (:file "game-world" :depends-on ("package" "logging"))
+
+                         ;; Drivers
+                         (:file "ball-in-box" :depends-on ("game-world"))))))

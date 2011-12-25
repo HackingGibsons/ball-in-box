@@ -39,56 +39,37 @@
       (gl:vertex left bottom (cz o))
       (gl:vertex left top (cz o)))))
 
-(defclass game-world ()
-  ((objects :accessor objects
-            :initform nil)))
-
-(defmethod tick ((world game-world) dt)
-  (log-for (trace) "Timestep: ~A FPS: ~F" (sdl:ticks) (sdl:average-fps)))
-
-(defmethod draw ((world game-world))
-  (mapc #'draw (objects world)))
-
 ;; Entry
+(defmethod ball-in-box :around (&key)
+  "Setup the traps, int the right parts of SDL"
+  (sb-int:with-float-traps-masked (:divide-by-zero :invalid :inexact :underflow :overflow)
+    (sdl:with-init (sdl:SDL-INIT-AUDIO sdl:SDL-INIT-VIDEO)
+      (call-next-method))))
+
 (defmethod ball-in-box (&key)
+  "Main entry method. Set up the world, initialize it and enter the game loop."
   (log-for (output) "BOOTING!")
   (let ((world (make-instance 'game-world)))
 
+    (log-for (output) "Initing world.")
+    (init world :width (getf *window* :width)
+                :height (getf *window* :height))
+
+    ;; Add some stuff
     (push (make-instance 'rectangle :width 100 :height 100)
           (objects world))
     (push (make-instance 'rectangle :width 30 :height 30 :color '(0 255 0) :cx -100)
           (objects world))
 
-    (sb-int:with-float-traps-masked (:divide-by-zero :invalid :inexact :underflow :overflow)
-      (sdl:with-init (sdl:SDL-INIT-AUDIO sdl:SDL-INIT-VIDEO)
-        (sdl:window (getf *window* :width) (getf *window* :height)
-                    :fps (make-instance 'sdl:fps-timestep :dt 10)
-                    :title-caption (getf *window* :title)
-                    :icon-caption (getf *window* :title)
-                    :opengl t
-                    :double-buffer t
-                    :hw t
-                    :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))
+    (log-for (output) "Entering event loop.")
+    (sdl:with-events (:poll)
+      (:quit-event () (terminate world))
+      (:idle
+       (sdl:with-timestep
+         (tick world (sdl:dt)))
 
-        (gl:clear-color 0 0 0 0)
-        (gl:matrix-mode :projection)
-        (gl:load-identity)
-        (gl:ortho 0 (getf *window* :width) (getf *window* :height) 0 -1 1)
+       ;; Draw the game world
+       (draw world)
 
-        (sdl:with-events (:poll)
-          (:quit-event () t)
-          (:idle ()
-                 (sdl:with-timestep
-                   (tick world (sdl:dt)))
-
-                 (gl:clear :color-buffer-bit)
-                 (gl:matrix-mode :modelview)
-                 (gl:load-identity)
-                 (gl:translate (/ (getf *window* :width) 2.0)
-                               (/ (getf *window* :height) 2.0)
-                               0)
-
-
-                 (draw world)
-
-                 (sdl:update-display)))))))
+       ;; Finish the frame
+       (sdl:update-display)))))
