@@ -44,6 +44,9 @@
     (add-object world
                 (make-instance 'circle :radius 150 :center #(300 0 0)))
 
+    (add-object world
+                (make-instance 'sdl-overlay :width 800 :height 600))
+
     (log-for (output) "Entering event loop.")
     (sdl:with-events (:poll)
       (:quit-event () (terminate world))

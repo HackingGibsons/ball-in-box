@@ -110,7 +110,6 @@ for the object"
             (vector right top (cz o))
             (vector right bottom (cz o))))))
 
-
 (defmethod draw ((o rectangle))
   (when (color o)
     (apply #'gl:color (color o)))
@@ -118,8 +117,6 @@ for the object"
   (gl:with-primitive :polygon
     (mapc #L(apply #'gl:vertex (map 'list #'identity !1))
           (vertexes o))))
-
-
 (defclass circle (object)
   ((color :initform `(255 255 255)
           :initarg :color
@@ -159,3 +156,52 @@ for the object"
 
 (defclass solid-accelerating-circle (circle accelerating-object solid-object)
   ())
+
+
+;; Textured Quad
+(defclass gl-texture-mixin ()
+    ((tex-id :reader tex-id :initform (first (gl:gen-textures 1)))))
+
+(defclass sdl-overlay (rectangle gl-texture-mixin)
+  ((surface :accessor overlay-surface :initform nil)))
+
+(defmethod initialize-instance :after ((o gl-texture-mixin) &key)
+  (gl:bind-texture :texture-2d (tex-id o))
+  (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+  (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+  (gl:bind-texture :texture-2d 0))
+
+(defmethod initialize-instance :after ((o sdl-overlay) &key)
+  (with-slots (surface width height tex-id) o
+    (setf surface
+          (sdl:create-surface width height :alpha 0 :pixel-alpha 0))
+    (gl:bind-texture :texture-2d tex-id)
+    (sdl:with-color (sdl:*white*)
+      (sdl:with-font (font sdl:*ttf-font-vera*)
+        (sdl:clear-display (sdl:color :a 0) :surface surface)
+        (sdl:draw-string-solid-* "Texture" 0 0 :surface surface)))
+    (sdl:with-pixel (pixels (sdl:fp surface))
+      (gl:tex-image-2d :texture-2d 0 :rgb width height 0 :rgba :unsigned-byte (sdl:pixel-data pixels)))
+    (gl:bind-texture :texture-2d 0)))
+
+(defmethod tex-coords ((o sdl-overlay))
+  (list (vector 0 0 (cz o))
+        (vector 0 1 (cz o))
+        (vector 1 1 (cz o))
+        (vector 1 0 (cz o))))
+
+(defmethod draw ((o sdl-overlay))
+  (gl:enable :texture-2d :blend)
+  (gl:color 1 1 1 1)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:bind-texture :texture-2d (tex-id o))
+
+  (gl:with-primitive :polygon
+    (mapc #'(lambda (tex v)
+              (apply #'gl:tex-coord (map 'list #'identity tex))
+              (apply #'gl:vertex (map 'list #'identity v)))
+          (tex-coords o)
+          (vertexes o)))
+
+  (gl:bind-texture :texture-2d 0)
+  (gl:disable :texture-2d :blend))

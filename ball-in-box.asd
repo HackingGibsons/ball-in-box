@@ -4,6 +4,7 @@
                #:arnesi
                #:lispbuilder-sdl
                #:lispbuilder-sdl-mixer
+               #:lispbuilder-sdl-ttf
                #:cl-opengl)
   :components ((:module "src" :components
                         (;; Basics
