@@ -35,9 +35,16 @@
                              :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))))
 
   (prog1 world
-    (gl:enable :depth-test :blend)
-    (gl:clear-color 0 0 0 0)
+
+    (gl:enable :texture-2d :depth-test)
+    (gl:clear-depth 1.0)
+    (gl:shade-model :smooth)
+    (gl:clear-color 0 0 0 1)
+
+    (gl:depth-func :lequal)
+
     (gl:matrix-mode :projection)
+
     (gl:load-identity)
     (gl:ortho 0 width height 0 -1 1)))
 
