@@ -38,7 +38,9 @@ furthest point from center and reporting its distance."
 
 (defmethod tick :after ((o solid-object) dt)
   "Attempt to signal collisions."
-  (let* ((solids (remove o (remove-if-not #L(typep !1 'solid-object) (objects (world o)))))
+  (let* ((solids (remove-if-not #L(and (not (eq !1 o))
+                                       (typep !1 'solid-object))
+                                (objects (world o))))
          (radius (radius o))
          (in-radius (remove-if #L(<= radius !1) solids :key #L(distance o !1))))
     (when in-radius
