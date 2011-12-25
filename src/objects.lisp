@@ -119,12 +119,6 @@ furthest point from center and reporting its distance."
       (gl:tex-image-2d :texture-2d 0 :rgb width height 0 :rgba :unsigned-byte (sdl:pixel-data pixels)))
     (gl:bind-texture :texture-2d 0)))
 
-(defclass moving-rectangle (rectangle moving-object)
-  ())
-
-(defclass accelerating-rectangle (rectangle accelerating-object)
-  ())
-
 (defmethod vertexes ((o rectangle))
   "Returns a list of vector3 vertexes in drawing order
 for the object"
