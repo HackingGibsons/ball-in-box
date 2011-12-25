@@ -16,6 +16,14 @@
 (defmethod vertexes ((o object)) nil)
 (defmethod draw ((o object)) nil)
 (defmethod tick ((o object) dt) nil)
+(defmethod radius ((o object))
+  "Calculate a generalized radius for `o' by determining the
+furthest point from center and reporting its distance."
+  (let ((distances (mapcar #L(sqrt (dot (diff (center o) !1)
+                                        (diff (center o) !1)))
+                           (vertexes o))))
+    (and distances
+         (apply #'max distances))))
 
 (defclass moving-object (object)
   ((velocity :initform #(0 0 0)
