@@ -1,5 +1,8 @@
 (in-package :ball-in-box)
 
+;; Debugging
+(defcategory fps)
+
 ;; Entry
 (defmethod ball-in-box :around (&key)
   "Setup the traps, int the right parts of SDL"
@@ -49,4 +52,5 @@
        (draw world)
 
        ;; Finish the frame
+       (log-for (fps) "FPS: ~F" (sdl:average-fps))
        (sdl:update-display)))))
