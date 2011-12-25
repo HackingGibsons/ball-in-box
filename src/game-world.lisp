@@ -6,6 +6,11 @@
    (screen-height :initarg :screen-height
                   :accessor screen-height)
    (screen :accessor screen)
+
+   (gravity :initarg :gravity :initarg :g
+            :accessor gravity :accessor g
+            :initform 9.8)
+
    (objects :accessor objects
             :initform nil)))
 
@@ -26,7 +31,7 @@
                              :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))))
 
   (prog1 world
-    (gl:enable :depth-test)
+    (gl:enable :depth-test :blend)
     (gl:clear-color 0 0 0 0)
     (gl:matrix-mode :projection)
     (gl:load-identity)
