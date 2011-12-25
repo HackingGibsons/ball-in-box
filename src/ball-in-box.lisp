@@ -34,7 +34,7 @@
 
     (add-object world
                 (make-instance 'solid-accelerating-rectangle :width 35 :height 25 :color '(255 0 100) :center #(-300 -350 0)
-                               :acceleration (vector 0 (* 4 (gravity world)) 0)))
+                               :acceleration (vector 0 (* 8 (gravity world)) 0)))
     (add-object world
                 (make-instance 'solid-rectangle :width 40 :height 40 :center #(-300 100 0)))
 
