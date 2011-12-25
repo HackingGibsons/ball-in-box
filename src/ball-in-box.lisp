@@ -19,7 +19,8 @@
     ;; Add some stuff
     (push (make-instance 'rectangle :width 100 :height 100)
           (objects world))
-    (push (make-instance 'rectangle :width 30 :height 30 :color '(0 255 0) :cx -100)
+    (push (make-instance 'moving-rectangle :width 30 :height 30 :color '(0 255 0) :center #(-100 0 0)
+                         :v #(0.001 0.001 0))
           (objects world))
 
     (log-for (output) "Entering event loop.")
