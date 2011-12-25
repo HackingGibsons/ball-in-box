@@ -14,6 +14,9 @@
 (defmethod cz ((o object))
   (svref (center o) 2))
 
+(defmethod distance ((o1 object) (o2 object))
+  "Distance between two objects."
+  (diff-mag (center o1) (center o2)))
 (defmethod vertexes ((o object)) nil)
 (defmethod draw ((o object)) nil)
 (defmethod tick ((o object) dt) nil)
