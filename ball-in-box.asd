@@ -3,6 +3,7 @@
   :depends-on (#:log5
                #:lispbuilder-sdl
                #:lispbuilder-sdl-mixer
+               #:lispbuilder-sdl-ttf
                #:cl-opengl
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria
