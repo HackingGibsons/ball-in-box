@@ -10,7 +10,7 @@
             :initform nil)))
 
 (defmethod tick ((world game-world) dt)
-  (log-for (trace) "Timestep: ~A FPS: ~F" (sdl:ticks) (sdl:average-fps)))
+  (mapc #'(lambda (o) (tick o dt)) (objects world)))
 
 (defmethod init ((world game-world) &key (width 1024) (height 768))
   (with-slots (screen screen-width screen-height) world

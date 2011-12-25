@@ -1,18 +1,35 @@
 (in-package :ball-in-box)
 
 (defclass object ()
-  ((cx :initform 0
-       :initarg :cx
-       :accessor cx)
-   (cy :initform 0
-       :initarg :cy
-       :accessor cy)
-   (cz :initform 0
-       :initarg :cz
-       :accessor cz)))
+  ((center :initform #(0 0 0) :initarg :center
+           :accessor center
+           :accessor c)))
+
+(defmethod cx ((o object))
+  (svref (center o) 0))
+
+(defmethod cy ((o object))
+  (svref (center o) 1))
+
+(defmethod cz ((o object))
+  (svref (center o) 2))
 
 (defmethod draw ((o object))
   (log-for (output warn) "Trying to draw a singularity: ~A" o))
+
+(defmethod tick ((o object) dt) nil)
+
+(defclass moving-object (object)
+  ((velocity :initform #(0 0 0)
+             :initarg :velocity :initarg :v
+             :accessor velocity :accessor v)))
+
+(defmethod tick :before ((o moving-object) dt)
+  "Translate the moving object `o' along it's velocity vector scaled for timeslice `dt'"
+  (let* ((scale (/ 1000 dt))
+         (scaled (map 'vector #'(lambda (i) (* scale i)) (velocity o))))
+    (setf (center o)
+          (map 'vector #'+ (center o) scaled))))
 
 (defclass rectangle (object)
   ((color :initform '(255 0 0)
@@ -24,6 +41,9 @@
    (height :initform 100
            :initarg :height
            :accessor height)))
+
+(defclass moving-rectangle (rectangle moving-object)
+  ())
 
 (defmethod draw ((o rectangle))
   (let ((top (+ (cy o) (/ (height o) 2)))
