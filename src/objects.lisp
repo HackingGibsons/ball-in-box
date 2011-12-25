@@ -96,18 +96,6 @@ furthest point from center and reporting its distance."
            :initarg :height
            :accessor height)))
 
-(defclass solid-rectangle (rectangle solid-object)
-  ())
-
-(defclass moving-rectangle (rectangle moving-object)
-  ())
-
-(defclass accelerating-rectangle (rectangle accelerating-object)
-  ())
-
-(defclass solid-accelerating-rectangle (rectangle accelerating-object solid-object)
-  ())
-
 (defmethod vertexes ((o rectangle))
   "Returns a list of vector3 vertexes in drawing order
 for the object"
@@ -130,3 +118,44 @@ for the object"
   (gl:with-primitive :polygon
     (mapc #L(apply #'gl:vertex (map 'list #'identity !1))
           (vertexes o))))
+
+
+(defclass circle (object)
+  ((color :initform `(255 255 255)
+          :initarg :color
+          :accessor color)
+   (radius :initform 100
+           :accessor radius :accessor r
+           :initarg :radius :initarg :r)))
+
+(defmethod vertexes ((o circle))
+  (let ((arc-deg 10))
+    (loop for angle from 0 to 360 by arc-deg collecting
+         (vector (+ (cx o) (* (radius o) (sin (deg-to-rad angle))))
+                 (+ (cy o) (* (radius o) (cos (deg-to-rad angle))))
+                 (cz o)))))
+
+(defmethod draw ((o circle))
+  (when (color o)
+    (apply #'gl:color (color o)))
+
+  (gl:with-primitive :triangle-fan
+    (gl:vertex (cx o) (cy o) (cz o))
+    (mapc #L(apply #'gl:vertex (map 'list #'identity !1))
+          (vertexes o))))
+
+
+(defclass solid-rectangle (rectangle solid-object)
+  ())
+
+(defclass moving-rectangle (rectangle moving-object)
+  ())
+
+(defclass accelerating-rectangle (rectangle accelerating-object)
+  ())
+
+(defclass solid-accelerating-rectangle (rectangle accelerating-object solid-object)
+  ())
+
+(defclass solid-accelerating-circle (circle accelerating-object solid-object)
+  ())
