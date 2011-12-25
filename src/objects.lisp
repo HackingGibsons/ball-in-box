@@ -13,6 +13,7 @@
 (defmethod cz ((o object))
   (svref (center o) 2))
 
+(defmethod vertexes ((o object)) nil)
 (defmethod draw ((o object)) nil)
 (defmethod tick ((o object) dt) nil)
 
