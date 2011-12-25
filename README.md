@@ -12,12 +12,11 @@ It's a CommonLisp project powered by SBCL using Lipbuilders-SDL and OpenGL
 ## The.. what now?
 We wanted to build a game, and we kinda like lisp.
 You can try it at home:
-```
-$ git clone https://sshirokov@github.com/HackingGibsons/ball-in-box.git
-$ cd ball-in-box
-$ make develop
-$ sbcl --eval '(ql:quickload :ball-in-box)' \
-       --eval '(ball-in-box:ball-in-box)' \
-       --eval '(quit)'
-```
+    $ git clone https://sshirokov@github.com/HackingGibsons/ball-in-box.git
+    $ cd ball-in-box
+    $ make develop
+    $ sbcl --eval '(ql:quickload :ball-in-box)' \
+           --eval '(ball-in-box:ball-in-box)' \
+           --eval '(quit)'
+
 
