@@ -96,29 +96,6 @@ furthest point from center and reporting its distance."
            :initarg :height
            :accessor height)))
 
-(defclass gl-texture-mixin ()
-    ((tex-id :reader tex-id :initform (first (gl:gen-textures 1)))))
-
-(defclass sdl-overlay (rectangle gl-texture-mixin)
-  ((surface :accessor overlay-surface :initform nil)))
-
-(defmethod initialize-instance :after ((o gl-texture-mixin) &key)
-  (gl:bind-texture :texture-2d (tex-id o))
-  (gl:tex-parameter :texture-2d :texture-min-filter :linear)
-  (gl:tex-parameter :texture-2d :texture-mag-filter :linear))
-
-(defmethod initialize-instance :after ((o sdl-overlay) &key)
-  (with-slots (surface width height) o
-    (setf (slot-value o 'surface)
-          (sdl:create-surface width height :alpha 0 :pixel-alpha 0))
-    (sdl:with-color (sdl:*white*)
-      (sdl:with-font (font sdl:*ttf-font-vera*)
-        (sdl:clear-display (sdl:color :a 0) :surface surface)
-        (sdl:draw-string-solid-* "Texture" 0 0 :surface surface)))
-    (sdl:with-pixel (pixels (sdl:fp surface))
-      (gl:tex-image-2d :texture-2d 0 :rgb width height 0 :rgba :unsigned-byte (sdl:pixel-data pixels)))
-    (gl:bind-texture :texture-2d 0)))
-
 (defmethod vertexes ((o rectangle))
   "Returns a list of vector3 vertexes in drawing order
 for the object"
@@ -132,7 +109,6 @@ for the object"
             (vector left top (cz o))
             (vector right top (cz o))
             (vector right bottom (cz o))))))
-
 
 (defmethod draw ((o rectangle))
   (when (color o)
@@ -181,26 +157,51 @@ for the object"
 (defclass solid-accelerating-circle (circle accelerating-object solid-object)
   ())
 
+
+;; Textured Quad
+(defclass gl-texture-mixin ()
+    ((tex-id :reader tex-id :initform (first (gl:gen-textures 1)))))
+
+(defclass sdl-overlay (rectangle gl-texture-mixin)
+  ((surface :accessor overlay-surface :initform nil)))
+
+(defmethod initialize-instance :after ((o gl-texture-mixin) &key)
+  (gl:bind-texture :texture-2d (tex-id o))
+  (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+  (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+  (gl:bind-texture :texture-2d 0))
+
+(defmethod initialize-instance :after ((o sdl-overlay) &key)
+  (with-slots (surface width height tex-id) o
+    (setf surface
+          (sdl:create-surface width height :alpha 0 :pixel-alpha 0))
+    (gl:bind-texture :texture-2d tex-id)
+    (sdl:with-color (sdl:*white*)
+      (sdl:with-font (font sdl:*ttf-font-vera*)
+        (sdl:clear-display (sdl:color :a 0) :surface surface)
+        (sdl:draw-string-solid-* "Texture" 0 0 :surface surface)))
+    (sdl:with-pixel (pixels (sdl:fp surface))
+      (gl:tex-image-2d :texture-2d 0 :rgb width height 0 :rgba :unsigned-byte (sdl:pixel-data pixels)))
+    (gl:bind-texture :texture-2d 0)))
+
+(defmethod tex-coords ((o sdl-overlay))
+  (list (vector 0 0 (cz o))
+        (vector 0 1 (cz o))
+        (vector 1 1 (cz o))
+        (vector 1 0 (cz o))))
+
 (defmethod draw ((o sdl-overlay))
-    (let ((top (+ (cy o) (/ (height o) 2)))
-          (bottom (- (cy o) (/ (height o) 2)))
-          (left (- (cx o) (/ (width o) 2)))
-          (right (+ (cx o) (/ (width o) 2))))
-      (gl:enable :texture-2d :blend)
+  (gl:enable :texture-2d :blend)
+  (gl:color 1 1 1 1)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:bind-texture :texture-2d (tex-id o))
 
-      (gl:color 1.0 1.0 1.0 1.0)
-      (gl:blend-func :src-alpha :one)
+  (gl:with-primitive :polygon
+    (mapc #'(lambda (tex v)
+              (apply #'gl:tex-coord (map 'list #'identity tex))
+              (apply #'gl:vertex (map 'list #'identity v)))
+          (tex-coords o)
+          (vertexes o)))
 
-      (gl:bind-texture :texture-2d (tex-id o))
-      (gl:with-primitive :polygon
-        (gl:tex-coord 1 1)
-        (gl:vertex right top (cz o))
-        (gl:tex-coord 1 0)
-        (gl:vertex right bottom (cz o))
-        (gl:tex-coord 0 0)
-        (gl:vertex left bottom (cz o))
-        (gl:tex-coord 0 1)
-        (gl:vertex left top (cz o)))
-
-      (gl:disable :texture-2d :blend)))
-
+  (gl:bind-texture :texture-2d 0)
+  (gl:disable :texture-2d :blend))
