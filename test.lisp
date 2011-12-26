@@ -1,41 +1,131 @@
-(in-package :cl-user)
-(ql:quickload :lispbuilder-sdl)
-(ql:quickload :lispbuilder-sdl-mixer)
-(ql:quickload :cl-opengl)
+(in-package :ball-in-box)
 
-(defun test-mixer ()
-    (ql:quickload :lispbuilder-sdl-mixer-examples)
+(defparameter *visited* nil)
+
+(defun make-shape (bitmap x y)
+  (labels ((color-at (point)
+             (sdl:fp (sdl:read-pixel-* (svref point 0) (svref point 1) :surface bitmap)))
+           (black-p (point)
+             (let ((result (equalp #(0 0 0 255) (color-at point))))
+               result))
+
+           (onscreen-p (v)
+             (let ((x (svref v 0))
+                   (y (svref v 1)))
+             (and (> x 0)
+                  (< x (sdl:width bitmap))
+                  (> y 0)
+                  (< y (sdl:height bitmap)))))
+           (neighbors (p)
+             (let ((x (svref p 0))
+                   (y (svref p 1)))
+               (remove-if-not #L(and (onscreen-p !1) (not (black-p !1)))
+                              (list (vector (1+ x) (1+ y))
+                                    (vector x (1+ y))
+                                    (vector (1- x) (1+ y))
+                                    (vector (1- x) y)
+                                    (vector (1- x) (1- y))
+                                    (vector x (1- y))
+                                    (vector (1+ x) (1- y))
+                                    (vector (1+ x) y)))))
+           (leaf-p (p)
+             (let ((n (neighbors p)))
+               (or (< (length n) 8)
+                   (find-if #'black-p
+                            n))))
+           (edge-direction (p &optional exclude-vector)
+             (let* ((n (neighbors p))
+                    (leafs (remove-if-not #'leaf-p n))
+                    (leafs (if exclude-vector
+                               (remove-if #'zerop leafs :key #L(angle exclude-vector
+                                                                      (diff p !1)))
+                               leafs)))
+               (when leafs
+                 (diff (car leafs) p))))
+           (longest-vector (point v)
+             (do* ((longest v (mag+ longest))
+                   (end (map 'vector #'round (sum longest point))
+                        (map 'vector #'round (sum longest point))))
+                  ((or (black-p end) (not (leaf-p end)))
+                   (mag+ longest -1)))))
+    (let* ((p (vector x y))
+           (color (color-at p))
+           (initial (edge-direction p))
+           (r (list))
+
+           (next nil)
+           (longest (longest-vector p initial)))
+      (format t "P:~A Initial: ~A~%" p initial)
+      (format t "LV:~A ~%" longest)
+      (setf p (map 'vector #'round (sum longest p)))
+      (setf initial (edge-direction p longest))
+      (setf longest (longest-vector p initial))
+      (format t "P:~A Initial: ~A~%" p initial)
+      (format t "LV:~A ~%" longest)
+      (setf p (map 'vector #'round (sum longest p)))
+      (setf initial (edge-direction p longest))
+      (setf longest (longest-vector p initial))
+      (format t "P:~A Initial: ~A~%" p initial)
+      (format t "LV:~A ~%" longest)
+      (setf p (map 'vector #'round (sum longest p)))
+      (setf initial (edge-direction p longest))
+      (setf longest (longest-vector p initial))
+      (format t "P:~A Initial: ~A~%" p initial)
+      (format t "LV:~A ~%" longest)
+
+      (format t "P:~A~%" (sum longest p))
+      t)))
+
+
+  (defun test-sdl-opengl-drawing ()
     (sb-int:with-float-traps-masked (:divide-by-zero :invalid :inexact :underflow :overflow)
-      (SDL-MIXER-EXAMPLES:MIXER)))
+      (sdl:with-init (sdl:SDL-INIT-AUDIO sdl:SDL-INIT-VIDEO)
+        (SDL:SET-AUDIO-DRIVER "coreaudio")
+        (sdl:window 1024 768
+                    :title-caption "OpenGL Example"
+                    :icon-caption "OpenGL Example"
+                    :opengl t
+                    :resizable t
+                    :double-buffer t
+                    :hw t
+                    :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))
+        (gl:clear-color 0 0 0 0)
 
-(defun test-sdl-opengl-drawing ()
-  (sb-int:with-float-traps-masked (:divide-by-zero :invalid :inexact :underflow :overflow)
-    (sdl:with-init (sdl:SDL-INIT-AUDIO sdl:SDL-INIT-VIDEO)
-      (SDL:SET-AUDIO-DRIVER "coreaudio")
-      (sdl:window 1024 768
-                  :title-caption "OpenGL Example"
-                  :icon-caption "OpenGL Example"
-                  :opengl t
-                  :resizable t
-                  :double-buffer t
-                  :hw t
-                  :opengl-attributes '((:SDL-GL-DOUBLEBUFFER 1)))
-      (gl:clear-color 0 0 0 0)
-      (gl:matrix-mode :projection)
-      (gl:load-identity)
-      (gl:ortho 0 1 0 1 -1 1)
+        (gl:shade-model :smooth)
+        (gl:clear-color 0 0 0 1)
 
-      (sdl:with-events (:poll)
-        (:quit-event () t)
-        (:idle ()
-               (gl:clear :color-buffer-bit)
-               (gl:color 1 1 1)
-               (gl:with-primitive :polygon
-                 (gl:vertex 0.25 0.25 0)
-                 (gl:vertex 0.75 0.25 0)
-                 (gl:vertex 0.75 0.75 0)
-                 (gl:vertex 0.25 0.75 0))
-               (gl:flush)
+        (gl:depth-func :lequal)
+        (gl:matrix-mode :projection)
+        (gl:enable :depth-test)
+        (gl:load-identity)
 
-               (sdl:update-display)
-               t)))))
+        (gl:ortho 0 1 0 1 -1 1)
+        (let* ((bitmap (sdl-image:load-image (merge-pathnames (pathname "src/test.bmp")
+                                                              (asdf:system-source-directory :ball-in-box)) :image-type :bitmap))
+               (shapes (make-hash-table :test 'equalp)))
+
+          (sdl:update-display bitmap)
+
+
+          (loop for x from 0 to (sdl:width bitmap) do
+               (loop for y from 0 to (sdl:height bitmap)
+                     for color = (sdl:fp (sdl:read-pixel-* x y :surface bitmap))
+                  do
+                    (unless (or (equalp #(0 0 0 255) color) (gethash color shapes))
+                      (setf (gethash color shapes) (make-shape bitmap x y)))))
+
+          (format t "shapes: ~A~%" shapes)
+
+          (sdl:with-events (:poll)
+            (:quit-event () t)
+            (:idle ()
+                   (gl:clear :color-buffer-bit :depth-buffer-bit)
+                   (gl:color 0.5 0.5 0)
+                   (gl:with-primitive :polygon
+                     (gl:vertex 0.25 0.25 0)
+                     (gl:vertex 0.75 0.25 0)
+                     (gl:vertex 0.75 0.75 0)
+                     (gl:vertex 0.25 0.75 0))
+                   (gl:flush)
+                   (sdl:update-display)
+                   t))))))
