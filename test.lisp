@@ -50,8 +50,16 @@
                          (t
                           (visit p)
                           (mapcar #'walk friends))))))
-        (walk (vector x y)))
-      (arnesi:hash-table-keys visited))))
+
+        (walk (vector x y))
+        (let* ((points (sort (copy-seq (arnesi:hash-table-keys visited))
+                             #'< :key #L(gethash !1 visited)))
+               (ht-mag (diff-mag (first points) (car (last points)))))
+          (format t "Diff-mag[~A]: ~A~%" (length points) ht-mag)
+          (when (< (length points) 10)
+            (format t "Points: ~A~%" points))
+
+          points)))))
 
            ;; (edge-direction (p &optional exclude-vector)
            ;;   (let* ((n (neighbors p))
