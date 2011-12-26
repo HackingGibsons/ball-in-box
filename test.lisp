@@ -49,16 +49,15 @@
                   ((or (black-p end) (not (leaf-p end)))
                    (mag+ longest -1)))))
 
-    (let ((start (vector x y))
-          (edges (list)))
-      (do* ((last nil (longest-vector p direction))
-            (p start (map 'vector #'round (sum last p)))
-            (direction (edge-direction p) (edge-direction p last)))
-           ((and last (equalp p start)) edges)
-        (push last edges)
-        (format t "P: ~A Last: ~A~%" p last))
-      (format t "Start ~A Edges ~A~%" start edges)
-      t)))
+    (let* ((start (vector x y))
+          (points
+           (do* ((points nil (append points (list p)))
+                 (last nil (longest-vector p direction))
+                 (p start (map 'vector #'round (sum last p)))
+                 (direction (edge-direction p) (edge-direction p last)))
+                ((and last (equalp p start)) points))))
+      (format t "Start ~A Points ~A~%" start points))
+    t))
 
 
   (defun test-sdl-opengl-drawing ()
