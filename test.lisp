@@ -5,6 +5,7 @@
 (defun make-shape (bitmap x y)
   (labels ((color-at (point)
              (sdl:fp (sdl:read-pixel-* (svref point 0) (svref point 1) :surface bitmap)))
+
            (black-p (point)
              (let ((result (equalp #(0 0 0 255) (color-at point))))
                result))
@@ -16,6 +17,7 @@
                   (< x (sdl:width bitmap))
                   (> y 0)
                   (< y (sdl:height bitmap)))))
+
            (neighbors (p)
              (let ((x (svref p 0))
                    (y (svref p 1)))
@@ -31,30 +33,48 @@
            (leaf-p (p)
              (let ((n (neighbors p)))
                (or (< (length n) 8)
-                   (find-if #'black-p
-                            n))))
-           (edge-direction (p &optional exclude-vector)
-             (let* ((n (neighbors p))
-                    (leafs (remove-if-not #'leaf-p n))
-                    (leafs (if exclude-vector
-                               (remove-if #'zerop leafs :key #L(round (angle exclude-vector
-                                                                             (diff p !1))))
-                               leafs)))
-               (when leafs
-                 (diff (car leafs) p))))
-           (longest-vector (point v)
-             (do* ((longest v (mag+ longest))
-                   (end (map 'vector #'round (sum longest point))
-                        (map 'vector #'round (sum longest point))))
-                  ((or (black-p end) (not (leaf-p end)))
-                   (mag+ longest -1)))))
+                   (find-if #L(not (equalp (color-at p) (color-at !1)))
+                            n)))))
+    (let ((visited (make-hash-table :test 'equalp)))
+      (labels ((visited-p (p)
+                 (gethash p visited))
+               (visit (p)
+                 (setf (gethash p visited) t)
+                 :do-stuff)
+               (walk (p)
+                 (let ((friends (remove-if #L(or (visited-p !1)
+                                                 (not (leaf-p !1)))
+                                           (neighbors p))))
+                   (cond ((visited-p p) :done)
+                         (t
+                          (visit p)
+                          (mapcar #'walk friends))))))
+        (walk (vector x y)))
+      (arnesi:hash-table-keys visited))))
 
-           (do* ((start (vector x y) start)
-                 (points nil (append points (list p)))
-                 (last nil (longest-vector p direction))
-                 (p start (map 'vector #'round (sum last p)))
-                 (direction (edge-direction p) (edge-direction p last)))
-                ((and last (equalp p start)) points))))
+           ;; (edge-direction (p &optional exclude-vector)
+           ;;   (let* ((n (neighbors p))
+           ;;          (leafs (remove-if-not #'leaf-p n))
+           ;;          (leafs (if exclude-vector
+           ;;                     (remove-if #'zerop leafs :key #L(round (angle exclude-vector
+           ;;                                                                   (diff p !1))))
+           ;;                     leafs)))
+           ;;     (when leafs
+           ;;       (diff (car leafs) p))))
+
+           ;; (longest-vector (point v)
+           ;;   (do* ((longest v (mag+ longest))
+           ;;         (end (map 'vector #'round (sum longest point))
+           ;;              (map 'vector #'round (sum longest point))))
+           ;;        ((or (black-p end) (not (leaf-p end)))
+           ;;         (mag+ longest -1)))))
+
+           ;; (do* ((start (vector x y) start)
+           ;;       (points nil (append points (list p)))
+           ;;       (last nil (longest-vector p direction))
+           ;;       (p start (map 'vector #'round (sum last p)))
+           ;;       (direction (edge-direction p) (edge-direction p last)))
+           ;;      ((and last (equalp p start)) points))))
 
 
   (defun test-sdl-opengl-drawing ()
@@ -101,12 +121,17 @@
             (:quit-event () t)
             (:idle ()
 
+                   (gl:matrix-mode :modelview)
+                   (gl:load-identity)
+                   (gl:translate (- (/ 1024 2) 520) (- (/ 768 2) 280)  0)
+                   (gl:scale 3 3 0)
                    (gl:clear :color-buffer-bit :depth-buffer-bit)
                    (maphash #'(lambda (color points)
                                 (apply #'gl:color (map 'list #'identity color))
-                                (gl:with-primitive :line-strip
+                                (gl:with-primitive :points
                                   (dolist (point points)
-                                    (gl:vertex (svref point 0) (svref point 1))))) shapes)
+                                    (gl:vertex (svref point 0) (svref point 1)))))
+                            shapes)
                    (gl:flush)
                    (sdl:update-display)
                    t))))))
