@@ -37,8 +37,8 @@
              (let* ((n (neighbors p))
                     (leafs (remove-if-not #'leaf-p n))
                     (leafs (if exclude-vector
-                               (remove-if #'zerop leafs :key #L(angle exclude-vector
-                                                                      (diff p !1)))
+                               (remove-if #'zerop leafs :key #L(round (angle exclude-vector
+                                                                             (diff p !1))))
                                leafs)))
                (when leafs
                  (diff (car leafs) p))))
@@ -49,15 +49,12 @@
                   ((or (black-p end) (not (leaf-p end)))
                    (mag+ longest -1)))))
 
-    (let* ((start (vector x y))
-          (points
-           (do* ((points nil (append points (list p)))
+           (do* ((start (vector x y) start)
+                 (points nil (append points (list p)))
                  (last nil (longest-vector p direction))
                  (p start (map 'vector #'round (sum last p)))
                  (direction (edge-direction p) (edge-direction p last)))
                 ((and last (equalp p start)) points))))
-      (format t "Start ~A Points ~A~%" start points))
-    t))
 
 
   (defun test-sdl-opengl-drawing ()
@@ -82,7 +79,7 @@
         (gl:enable :depth-test)
         (gl:load-identity)
 
-        (gl:ortho 0 1 0 1 -1 1)
+        (gl:ortho 0 1024 768 1 -1 1)
         (let* ((bitmap (sdl-image:load-image (merge-pathnames (pathname "src/test.bmp")
                                                               (asdf:system-source-directory :ball-in-box)) :image-type :bitmap))
                (shapes (make-hash-table :test 'equalp)))
@@ -95,20 +92,21 @@
                      for color = (sdl:fp (sdl:read-pixel-* x y :surface bitmap))
                   do
                     (unless (or (equalp #(0 0 0 255) color) (gethash color shapes))
-                      (setf (gethash color shapes) (make-shape bitmap x y)))))
+                      (setf (gethash color shapes) (make-shape bitmap x y))
+                      (format t "Color ~A Points: ~A~%" color (length (gethash color shapes))))))
 
           (format t "shapes: ~A~%" shapes)
 
           (sdl:with-events (:poll)
             (:quit-event () t)
             (:idle ()
+
                    (gl:clear :color-buffer-bit :depth-buffer-bit)
-                   (gl:color 0.5 0.5 0)
-                   (gl:with-primitive :polygon
-                     (gl:vertex 0.25 0.25 0)
-                     (gl:vertex 0.75 0.25 0)
-                     (gl:vertex 0.75 0.75 0)
-                     (gl:vertex 0.25 0.75 0))
+                   (maphash #'(lambda (color points)
+                                (apply #'gl:color (map 'list #'identity color))
+                                (gl:with-primitive :line-strip
+                                  (dolist (point points)
+                                    (gl:vertex (svref point 0) (svref point 1))))) shapes)
                    (gl:flush)
                    (sdl:update-display)
                    t))))))
