@@ -7,7 +7,7 @@
 (in-package :ball-in-box)
 (arnesi:enable-sharp-l)
 
-(defvar *root* (asdf:system-source-directory :afdog)
+(defvar *root* (asdf:system-source-directory :ball-in-box)
   "What is considered the root of the application.")
 
 (defvar *window* `(:width 1024 :height 768
